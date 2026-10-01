@@ -11,10 +11,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
-        
-        env:
-          STEPS_CONTEXT: ${{ toJson(steps) }}
-        run: echo "$STEPS_CONTEXT"
 
       - name: Set up Python
         uses: actions/setup-python@v7
@@ -28,3 +24,17 @@ jobs:
 
       - name: Run tests
         run: python -m pytest
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Build Docker image
+        run: docker build -t ci-cd-lab:${{ github.sha }} .
+
+      - name: Show Docker image
+        run: docker images
