@@ -29,12 +29,29 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      packages: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
 
-      - name: Build Docker image
-        run: docker build -t ci-cd-lab:${{ github.sha }} .
+      - name: Log in to GitHub Container Registry
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Show Docker image
-        run: docker images
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t ghcr.io/driv3r-tech/ci-cd-lab:${{ github.sha }} \
+            .
+
+      - name: Push Docker image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          docker push ghcr.io/driv3r-tech/ci-cd-lab:${{ github.sha }}
